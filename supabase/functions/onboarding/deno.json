@@ -1,5 +1,10 @@
 {
+  "compilerOptions": {
+    "strict": true
+  },
   "imports": {
-    "hono": "jsr:@hono/hono@4.11.3"
+    "hono": "jsr:@hono/hono@4.11.3",
+    "phone": "npm:phone@3.1.69",
+    "zod": "npm:zod@4.3.2"
   }
 }
