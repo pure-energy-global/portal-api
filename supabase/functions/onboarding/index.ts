@@ -4,7 +4,7 @@ import { Hono } from "hono"
 import { LogPhoneNumberUseCase } from "./domain/usecase/LogPhoneNumberUseCase.ts"
 import { NotAValidFormSubmissionError } from "./domain/model/NotAValidFormSubmissionError.ts";
 import { IsPerformingSendToPhoneFlowUseCase } from "./domain/usecase/IsPerformingSendToPhoneFlowUseCase.ts";
-import { IsWebhookFromTallyUseCase } from "./domain/usecase/IsWebhookFromTallyUseCase.ts";
+import { IsWebhookFromExpectedFormVendorUseCase } from "./domain/usecase/IsWebhookFromExpectedFormVendorUseCase.ts";
 
 const app = new Hono().basePath(BASE_PATH);
 
@@ -14,14 +14,14 @@ app.post("/", async (context) => {
 
     const logger = new LogPhoneNumberUseCase();
     const scenarioChecker = new IsPerformingSendToPhoneFlowUseCase();
-    const tallyWebhookChecker = new IsWebhookFromTallyUseCase();
+    const webhookValidator = new IsWebhookFromExpectedFormVendorUseCase();
 
     try {
-        const isWebhookFromTally = await tallyWebhookChecker.execute(headers, body);
+        const isWebhookFromExpectedFormVendor = await webhookValidator.execute(headers, body);
 
-        if (!isWebhookFromTally) {
+        if (!isWebhookFromExpectedFormVendor) {
             return context.json(<ErrorResponseDomainModel>{
-                message: "Not a verified form submission from Tally"
+                message: "Not a verified form submission from an expected upstream vendor"
             }, 401);
         }
 

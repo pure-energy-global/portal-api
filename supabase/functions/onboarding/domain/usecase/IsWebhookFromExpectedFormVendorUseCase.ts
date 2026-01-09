@@ -2,9 +2,9 @@ import { EnvironmentVariableDataSource } from "../../../_shared/data/datasource/
 import { GetRemoteConfigUseCase } from "./GetRemoteConfigUseCase.ts";
 import { StringToFormSubmissionDataModelMapper } from "../../data/mapper/StringToFormSubmissionDataModelMapper.ts";
 import { StringToHmacSignatureMapper } from "../../data/mapper/StringToHmacSignatureMapper.ts";
-import { TALLY_EVENT_TYPE, TALLY_SIGNATURE_HEADER } from "../../config.ts";
+import { FORM_EVENT_TYPE, FORM_SIGNING_SIGNATURE_HEADER } from "../../config.ts";
 
-export class IsWebhookFromTallyUseCase {
+export class IsWebhookFromExpectedFormVendorUseCase {
     constructor(
         private readonly getRemoteConfigUseCase: GetRemoteConfigUseCase = new GetRemoteConfigUseCase(),
         private readonly stringToFormSubmissionMapper: StringToFormSubmissionDataModelMapper = new StringToFormSubmissionDataModelMapper(),
@@ -14,14 +14,14 @@ export class IsWebhookFromTallyUseCase {
 
     async execute(headers: Record<string, string | undefined>, payload: string): Promise<boolean> {
         // Step 1: Verify Tally Signature is present
-        if (!headers[TALLY_SIGNATURE_HEADER]) {
+        if (!headers[FORM_SIGNING_SIGNATURE_HEADER]) {
             console.warn("Missing Tally signature header");
             return false;
         }
 
         // Step 2: Verify Tally Signature matches expected HMAC signature
         const calculatedSignature = this.stringToHmacSignatureMapper.map(payload, this.tallySigningSecret);
-        const givenSignature = headers[TALLY_SIGNATURE_HEADER];
+        const givenSignature = headers[FORM_SIGNING_SIGNATURE_HEADER];
 
         if (calculatedSignature !== givenSignature) {
             console.warn("Tally signature mismatch");
@@ -32,7 +32,7 @@ export class IsWebhookFromTallyUseCase {
         const schema = this.stringToFormSubmissionMapper.map(payload);
 
         // Step 4: Verify event type is correct
-        if (schema.eventType !== TALLY_EVENT_TYPE) {
+        if (schema.eventType !== FORM_EVENT_TYPE) {
             console.warn("Tally event type mismatch");
             return false;
         }

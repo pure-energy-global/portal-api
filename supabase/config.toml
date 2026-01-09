@@ -383,6 +383,6 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 [functions.onboarding]
 enabled = true
-verify_jwt = false # Uses the `Tally-Signature` header + Signing Secret + HMAC for authorization
+verify_jwt = false # Uses a signing secret header for authorization
 import_map = "./functions/onboarding/deno.json"
 entrypoint = "./functions/onboarding/index.ts"
