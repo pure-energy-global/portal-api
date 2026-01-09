@@ -30,7 +30,7 @@ export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Ma
 
             return {
                 didUserOptIn: false,
-                phoneNumber: "",
+                phoneNumber: ""
             };
         }
 
@@ -42,7 +42,7 @@ export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Ma
 
             return {
                 didUserOptIn: false,
-                phoneNumber: "",
+                phoneNumber: ""
             };
         }
 
@@ -54,7 +54,7 @@ export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Ma
 
             return {
                 didUserOptIn: true,
-                phoneNumber: "",
+                phoneNumber: ""
             };
         }
 
@@ -62,18 +62,18 @@ export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Ma
         const rawPhoneNumber = (yourPhoneField.value as string) || "";
         const phoneValidationResult = phone(rawPhoneNumber, { country: "USA" });
 
-        if (phoneValidationResult.isValid) {
+        if (!phoneValidationResult.isValid) {
+             console.warn("The provided phone number is not valid");
+
             return {
                 didUserOptIn: true,
-                phoneNumber: phoneValidationResult.phoneNumber,
+                phoneNumber: ""
             };
         }
 
-        console.warn("The provided phone number is not valid");
-
         return {
             didUserOptIn: true,
-            phoneNumber: "",
+            phoneNumber: phoneValidationResult.phoneNumber
         };
     }
 }
