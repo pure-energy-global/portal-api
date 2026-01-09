@@ -20,9 +20,7 @@ app.post("/", async (context) => {
         const isWebhookFromExpectedFormVendor = await webhookValidator.execute(headers, body);
 
         if (!isWebhookFromExpectedFormVendor) {
-            return context.json(<ErrorResponseDomainModel>{
-                message: "Not a verified form submission from an expected upstream vendor"
-            }, 401);
+            throw new NotAValidFormSubmissionError("Not a verified form submission from an expected upstream vendor");
         }
 
         const isPerformingSendToPhoneFlow = await scenarioChecker.execute(body);

@@ -3,10 +3,10 @@ import { EnvironmentVariableDataSource } from "../../../_shared/data/datasource/
 
 export class RemoteConfigDataSource {
     constructor(private readonly client = createClient({
-        projectId: EnvironmentVariableDataSource("SANITY_PROJECT_ID"),
-        dataset: EnvironmentVariableDataSource("SANITY_DATASET"),
-        useCdn: EnvironmentVariableDataSource("SANITY_USE_CDN") === "true",
-        apiVersion: EnvironmentVariableDataSource("SANITY_API_VERSION")
+        projectId: EnvironmentVariableDataSource("CMS_PROJECT_ID"),
+        dataset: EnvironmentVariableDataSource("CMS_DATASET"),
+        useCdn: EnvironmentVariableDataSource("CMS_USE_CDN") === "true",
+        apiVersion: EnvironmentVariableDataSource("CMS_API_VERSION")
     })) {}
 
     async getConfigValues(): Promise<Array<{ key: string; value: string }>> {

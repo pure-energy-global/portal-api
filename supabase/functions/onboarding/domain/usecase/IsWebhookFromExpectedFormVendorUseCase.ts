@@ -9,22 +9,22 @@ export class IsWebhookFromExpectedFormVendorUseCase {
         private readonly getRemoteConfigUseCase: GetRemoteConfigUseCase = new GetRemoteConfigUseCase(),
         private readonly stringToFormSubmissionMapper: StringToFormSubmissionDataModelMapper = new StringToFormSubmissionDataModelMapper(),
         private readonly stringToHmacSignatureMapper: StringToHmacSignatureMapper = new StringToHmacSignatureMapper(),
-        private readonly tallySigningSecret: string = EnvironmentVariableDataSource("TALLY_SIGNING_SECRET") || ""
+        private readonly signingSecret: string = EnvironmentVariableDataSource("FORM_SIGNING_SECRET") || ""
     ) { }
 
     async execute(headers: Record<string, string | undefined>, payload: string): Promise<boolean> {
-        // Step 1: Verify Tally Signature is present
+        // Step 1: Verify signature header is present
         if (!headers[FORM_SIGNING_SIGNATURE_HEADER]) {
-            console.warn("Missing Tally signature header");
+            console.warn("Missing signature header");
             return false;
         }
 
-        // Step 2: Verify Tally Signature matches expected HMAC signature
-        const calculatedSignature = this.stringToHmacSignatureMapper.map(payload, this.tallySigningSecret);
+        // Step 2: Verify signature matches expected HMAC signature
+        const calculatedSignature = this.stringToHmacSignatureMapper.map(payload, this.signingSecret);
         const givenSignature = headers[FORM_SIGNING_SIGNATURE_HEADER];
 
         if (calculatedSignature !== givenSignature) {
-            console.warn("Tally signature mismatch");
+            console.warn("Signature mismatch");
             return false;
         }
 
@@ -33,7 +33,7 @@ export class IsWebhookFromExpectedFormVendorUseCase {
 
         // Step 4: Verify event type is correct
         if (schema.eventType !== FORM_EVENT_TYPE) {
-            console.warn("Tally event type mismatch");
+            console.warn("Form event type mismatch");
             return false;
         }
 
@@ -41,7 +41,7 @@ export class IsWebhookFromExpectedFormVendorUseCase {
         const config = await this.getRemoteConfigUseCase.execute();
 
         if (config.formId !== schema.data.formId) {
-            console.warn("Tally form ID mismatch");
+            console.warn("Form ID mismatch");
             return false;
         }
 
