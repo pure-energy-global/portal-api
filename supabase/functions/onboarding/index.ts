@@ -1,27 +1,51 @@
+import { BASE_PATH } from "./config.ts";
+import { ErrorResponseDomainModel } from "../_shared/domain/model/ErrorResponseDomainModel.ts";
 import { Hono } from "hono"
 import { LogPhoneNumberUseCase } from "./domain/usecase/LogPhoneNumberUseCase.ts"
-import { NotAValidFormSubmission } from "./domain/model/NotAValidFormSubmission.ts";
-import { NotAValidSendToPhoneFlow } from "./domain/model/NotAValidSendToPhoneFlow.ts";
+import { NotAValidFormSubmissionError } from "./domain/model/NotAValidFormSubmissionError.ts";
+import { IsPerformingSendToPhoneFlowUseCase } from "./domain/usecase/IsPerformingSendToPhoneFlowUseCase.ts";
+import { IsWebhookFromTallyUseCase } from "./domain/usecase/IsWebhookFromTallyUseCase.ts";
 
-const functionName = "onboarding"
-const endpointVersion = "v1"
-const app = new Hono().basePath(`/${functionName}/${endpointVersion}`)
+const app = new Hono().basePath(BASE_PATH);
 
-app.post("/send-to-phone", async (context) => {
+app.post("/", async (context) => {
+    const body = await context.req.json();
+    const headers = context.req.header();
+
     const logger = new LogPhoneNumberUseCase();
+    const scenarioChecker = new IsPerformingSendToPhoneFlowUseCase();
+    const tallyWebhookChecker = new IsWebhookFromTallyUseCase();
 
     try {
-        const result = logger.execute(await context.req.json());
-        return context.json(result, 201);
+        const isWebhookFromTally = await tallyWebhookChecker.execute(headers, body);
+
+        if (!isWebhookFromTally) {
+            return context.json(<ErrorResponseDomainModel>{
+                message: "Not a verified form submission from Tally"
+            }, 401);
+        }
+
+        const isPerformingSendToPhoneFlow = await scenarioChecker.execute(body);
+
+        if (isPerformingSendToPhoneFlow) {
+            await logger.execute(body);
+            return context.body(null, 204);
+        } else {
+            return context.json(<ErrorResponseDomainModel>{
+                message: "Flow not implemented"
+            }, 501);
+        }
     } catch (error) {
         console.error(error);
 
-        if (error instanceof NotAValidFormSubmission) {
-            return context.text("Invalid form payload", 400);
-        } else if (error instanceof NotAValidSendToPhoneFlow) {
-            return context.text("Not a valid 'Send to Phone' flow", 400);
+        if (error instanceof NotAValidFormSubmissionError) {
+            return context.json(<ErrorResponseDomainModel>{
+                message: "Invalid form submission payload"
+            }, 400);
         } else {
-            return context.text("Internal Server Error", 500);
+            return context.json(<ErrorResponseDomainModel>{
+                message: "Internal Server Error"
+            }, 500);
         }
     }
 })

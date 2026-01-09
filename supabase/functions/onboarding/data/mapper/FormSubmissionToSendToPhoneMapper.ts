@@ -1,23 +1,32 @@
-import { FormSubmission } from "../model/FormSubmission.ts";
+import { FormSubmissionDataModel } from "../model/FormSubmissionDataModel.ts";
+import { GetRemoteConfigUseCase } from "../../domain/usecase/GetRemoteConfigUseCase.ts";
+import { Mapper } from "../../../_shared/data/mapper/Mapper.ts";
 import { phone } from "phone";
-import { SendToPhone } from "../../domain/model/SendToPhone.ts";
+import { SendToPhoneDomainModel } from "../../domain/model/SendToPhoneDomainModel.ts";
+import { RemoteConfigDataSource } from "../datasource/RemoteConfigDataSource.ts";
+import { get } from "node:http";
 
-export class FormSubmissionToSendToPhoneMapper {
-    map(payload: FormSubmission): SendToPhone {
-        const textMeALinkFieldLabel = "Text me a link";
+export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Mapper<FormSubmissionDataModel, Promise<SendToPhoneDomainModel>> {
+    constructor(
+        private readonly getRemoteConfigUseCase: GetRemoteConfigUseCase = new GetRemoteConfigUseCase()
+    ) {}
+
+    async map(payload: FormSubmissionDataModel): Promise<SendToPhoneDomainModel> {
+        const config = await this.getRemoteConfigUseCase.execute();
+
+        const textMeALinkFieldId = config.textMeALinkFormFieldKey;
         const textMeALinkFieldType = "CHECKBOXES";
-        const textMeALinkCheckboxLabel = "Text me a link to continue this on my phone.";
 
-        const yourPhoneFieldLabel = "Your Phone";
+        const yourPhoneFieldId = config.phoneNumberFormFieldKey;
         const yourPhoneFieldType = "INPUT_PHONE_NUMBER";
 
         const fields = payload.data.fields;
 
         // Payload contains the expected checkbox field
-        const textMeALinkField = fields.find(field => field.label === textMeALinkFieldLabel && field.type === textMeALinkFieldType);
+        const textMeALinkField = fields?.find(field => field.key === textMeALinkFieldId && field.type === textMeALinkFieldType);
 
         if (!textMeALinkField) {
-            console.warn(`Missing a '${textMeALinkFieldLabel}' field that is also of type ${textMeALinkFieldType}.`);
+            console.warn(`Missing a checkbox option with key: '${textMeALinkFieldId}'`);
 
             return {
                 didUserOptIn: false,
@@ -25,23 +34,11 @@ export class FormSubmissionToSendToPhoneMapper {
             };
         }
 
-        // Payload options contains the expected checkbox
-        const checkedPhoneNumberCheckbox = textMeALinkField.options?.find(option => option.text === textMeALinkCheckboxLabel);
+        // Confirm checkbox is selected
+        const didSelectTextMeALinkOption = (textMeALinkField.value as boolean) || false;
 
-        if (!checkedPhoneNumberCheckbox) {
-            console.warn(`Missing a checkbox option with label: '${textMeALinkCheckboxLabel}'.`);
-
-            return {
-                didUserOptIn: false,
-                phoneNumber: "",
-            };
-        }
-
-        // Expected checkbox is selected
-        const selectedOptions = (textMeALinkField.value || []) as string[]; // Always the case with CHECKBOXES
-
-        if (!selectedOptions.includes(checkedPhoneNumberCheckbox.id)) {
-            console.warn(`The checkbox option with label: '${textMeALinkCheckboxLabel}' is not selected.`);
+        if (!didSelectTextMeALinkOption) {
+            console.warn(`The checkbox option with key: '${textMeALinkFieldId}' is not selected`);
 
             return {
                 didUserOptIn: false,
@@ -50,19 +47,19 @@ export class FormSubmissionToSendToPhoneMapper {
         }
 
         // Payload contains the expected phone number field
-        const yourPhoneField = fields.find(field => field.label === yourPhoneFieldLabel && field.type === yourPhoneFieldType);
+        const yourPhoneField = fields.find(field => field.key === yourPhoneFieldId && field.type === yourPhoneFieldType);
 
         if (!yourPhoneField) {
-            console.warn(`Missing a '${yourPhoneFieldLabel}' field that is also of type ${yourPhoneFieldType}.`);
+            console.warn(`Missing phone input with key: '${yourPhoneFieldId}'`);
 
             return {
-                didUserOptIn: false,
+                didUserOptIn: true,
                 phoneNumber: "",
             };
         }
 
         // Confirm phone number is valid
-        const rawPhoneNumber = yourPhoneField.value as string; // Always the case with INPUT_PHONE_NUMBER
+        const rawPhoneNumber = (yourPhoneField.value as string) || "";
         const phoneValidationResult = phone(rawPhoneNumber, { country: "USA" });
 
         if (phoneValidationResult.isValid) {
@@ -72,10 +69,10 @@ export class FormSubmissionToSendToPhoneMapper {
             };
         }
 
-        console.warn("The provided phone number is not valid.");
+        console.warn("The provided phone number is not valid");
 
         return {
-            didUserOptIn: false,
+            didUserOptIn: true,
             phoneNumber: "",
         };
     }

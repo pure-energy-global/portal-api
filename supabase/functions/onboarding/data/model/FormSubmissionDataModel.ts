@@ -28,10 +28,10 @@ export const DataSchema = z.object({
 });
 export type Data = z.infer<typeof DataSchema>;
 
-export const FormSubmissionSchema = z.object({
+export const FormSubmissionDataModelSchema = z.object({
     "eventId": z.string(),
     "eventType": z.string(),
     "createdAt": z.coerce.date(),
     "data": DataSchema,
 });
-export type FormSubmission = z.infer<typeof FormSubmissionSchema>;
+export type FormSubmissionDataModel = z.infer<typeof FormSubmissionDataModelSchema>;
