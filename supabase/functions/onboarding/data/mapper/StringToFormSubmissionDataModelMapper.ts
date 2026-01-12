@@ -8,7 +8,11 @@ export class StringToFormSubmissionDataModelMapper implements Mapper<string, For
             const schema = FormSubmissionDataModelSchema.parse(payload);
             return schema as FormSubmissionDataModel;
         } catch (error) {
-            throw new NotAValidFormSubmissionError("Failed to convert payload to FormSubmissionDataModel", error);
+            throw new NotAValidFormSubmissionError(
+                "Failed to convert payload to FormSubmissionDataModel",
+                undefined,
+                error
+            );
         }
     }
 }

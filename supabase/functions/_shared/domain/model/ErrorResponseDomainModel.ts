@@ -1,5 +1,6 @@
 export interface ErrorResponseDomainModel {
     code: number;
-    name: string;
+    internalMessage?: string;
     message: string;
+    name: string;
 }

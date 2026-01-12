@@ -1,8 +1,17 @@
-export class NotAValidFormSubmissionError extends TypeError {
-    constructor(message: string, cause?: unknown) {
-        super(message);
+import { HttpError } from "../../../_shared/domain/model/HttpError.ts";
 
-        this.cause = cause;
-        this.name = "NotAValidFormSubmission";
+export class NotAValidFormSubmissionError extends HttpError {
+    constructor(
+        internalMessage: string,
+        publicMessage: string = "Not a supported form submission payload",
+        cause?: unknown
+    ) {
+        super(
+            internalMessage,
+            publicMessage,
+            400,
+            "NotAValidFormSubmissionError",
+            cause
+        );
     }
 }

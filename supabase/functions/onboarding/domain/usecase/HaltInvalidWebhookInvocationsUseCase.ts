@@ -1,22 +1,21 @@
-import { ExpectedVendorOutcomeDomainModel } from "../model/ExpectedVendorOutcomeDomainModel.ts";
 import { FORM_EVENT_TYPE, FORM_SIGNATURE_HEADER, FORM_SIGNING_SECRET } from "../../config.ts";
 import { GetRemoteConfigUseCase } from "./GetRemoteConfigUseCase.ts";
 import { NotAValidFormSubmissionError } from "../model/NotAValidFormSubmissionError.ts";
 import { StringToFormSubmissionDataModelMapper } from "../../data/mapper/StringToFormSubmissionDataModelMapper.ts";
 import { StringToHmacSignatureMapper } from "../../data/mapper/StringToHmacSignatureMapper.ts";
+import { UnauthorizedError } from "../../../_shared/domain/model/UnauthorizedError.ts";
 
-export class IsWebhookFromExpectedFormVendorUseCase {
+export class HaltInvalidWebhookInvocationsUseCase {
     constructor(
         private readonly getRemoteConfigUseCase: GetRemoteConfigUseCase = new GetRemoteConfigUseCase(),
         private readonly stringToFormSubmissionMapper: StringToFormSubmissionDataModelMapper = new StringToFormSubmissionDataModelMapper(),
         private readonly stringToHmacSignatureMapper: StringToHmacSignatureMapper = new StringToHmacSignatureMapper(),
     ) { }
 
-    async execute(headers: Record<string, string | undefined>, payload: string): Promise<ExpectedVendorOutcomeDomainModel> {
+    async execute(headers: Record<string, string | undefined>, payload: string): Promise<void> {
         // Step 1: Verify signature header is present
         if (!headers[FORM_SIGNATURE_HEADER]) {
-            console.warn("Missing signature header");
-            return ExpectedVendorOutcomeDomainModel.UNAUTHORIZED;
+            throw new UnauthorizedError(`Missing the ${FORM_SIGNATURE_HEADER} header`);
         }
 
         // Step 2: Verify signature matches expected HMAC signature
@@ -24,38 +23,22 @@ export class IsWebhookFromExpectedFormVendorUseCase {
         const givenSignature = headers[FORM_SIGNATURE_HEADER];
 
         if (calculatedSignature !== givenSignature) {
-            console.warn("Signature mismatch");
-            return ExpectedVendorOutcomeDomainModel.UNAUTHORIZED;
+            throw new UnauthorizedError("Signature mismatch");
         }
 
         // Step 3: Verify the given schema matches the schema on record
-        let schema;
-
-        try {
-            schema = this.stringToFormSubmissionMapper.map(payload);
-        } catch (error) {
-            if (error instanceof NotAValidFormSubmissionError) {
-                console.warn("Schema validation failed");
-                return ExpectedVendorOutcomeDomainModel.INCORRECT_SCHEMA;
-            } else {
-                throw error;
-            }
-        }
+        const schema = this.stringToFormSubmissionMapper.map(payload);
 
         // Step 4: Verify event type is correct
         if (schema.eventType !== FORM_EVENT_TYPE) {
-            console.warn("Form event type mismatch");
-            return ExpectedVendorOutcomeDomainModel.INCORRECT_FORM_TYPE;
+            throw new NotAValidFormSubmissionError(`Expected event type ${FORM_EVENT_TYPE} but received ${schema.eventType}`);
         }
 
         // Step 5: Verify form ID is correct
         const config = await this.getRemoteConfigUseCase.execute();
 
         if (config.formId !== schema.data.formId) {
-            console.warn("Form ID mismatch");
-            return ExpectedVendorOutcomeDomainModel.INCORRECT_FORM_ID;
+            throw new NotAValidFormSubmissionError(`Expected form ID ${config.formId} but received ${schema.data.formId}`);
         }
-
-        return ExpectedVendorOutcomeDomainModel.SUCCESS;
     }
 }
