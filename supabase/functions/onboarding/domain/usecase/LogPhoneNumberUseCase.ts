@@ -8,8 +8,6 @@ export class LogPhoneNumberUseCase {
         private stringToFormSubmissionMapper: StringToFormSubmissionDataModelMapper = new StringToFormSubmissionDataModelMapper()
     ) { }
 
-    // Expects that IsPerformingSendToPhoneFlowUseCase has already been called and returned true
-    // before calling this use case
     async execute(payload: string): Promise<SendToPhoneDomainModel> {
         const schema = this.stringToFormSubmissionMapper.map(payload);
         const phoneOptIn = await this.formSubmissionToSendToPhoneMapper.map(schema);

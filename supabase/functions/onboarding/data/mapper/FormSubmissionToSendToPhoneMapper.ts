@@ -1,10 +1,9 @@
+import { FORM_FIELD_TYPE_CHECKBOX, FORM_FIELD_TYPE_PHONE_NUMBER, FORM_PHONE_NUMBER_COUNTRY_CODE } from "../../config.ts";
 import { FormSubmissionDataModel } from "../model/FormSubmissionDataModel.ts";
 import { GetRemoteConfigUseCase } from "../../domain/usecase/GetRemoteConfigUseCase.ts";
 import { Mapper } from "../../../_shared/data/mapper/Mapper.ts";
 import { phone } from "phone";
 import { SendToPhoneDomainModel } from "../../domain/model/SendToPhoneDomainModel.ts";
-import { RemoteConfigDataSource } from "../datasource/RemoteConfigDataSource.ts";
-import { get } from "node:http";
 
 export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Mapper<FormSubmissionDataModel, Promise<SendToPhoneDomainModel>> {
     constructor(
@@ -13,17 +12,13 @@ export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Ma
 
     async map(payload: FormSubmissionDataModel): Promise<SendToPhoneDomainModel> {
         const config = await this.getRemoteConfigUseCase.execute();
-
         const textMeALinkFieldId = config.textMeALinkFormFieldKey;
-        const textMeALinkFieldType = "CHECKBOXES";
-
         const yourPhoneFieldId = config.phoneNumberFormFieldKey;
-        const yourPhoneFieldType = "INPUT_PHONE_NUMBER";
 
         const fields = payload.data.fields;
 
         // Payload contains the expected checkbox field
-        const textMeALinkField = fields?.find(field => field.key === textMeALinkFieldId && field.type === textMeALinkFieldType);
+        const textMeALinkField = fields?.find(field => field.key === textMeALinkFieldId && field.type === FORM_FIELD_TYPE_CHECKBOX);
 
         if (!textMeALinkField) {
             console.warn(`Missing a checkbox option with key: '${textMeALinkFieldId}'`);
@@ -47,7 +42,7 @@ export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Ma
         }
 
         // Payload contains the expected phone number field
-        const yourPhoneField = fields.find(field => field.key === yourPhoneFieldId && field.type === yourPhoneFieldType);
+        const yourPhoneField = fields.find(field => field.key === yourPhoneFieldId && field.type === FORM_FIELD_TYPE_PHONE_NUMBER);
 
         if (!yourPhoneField) {
             console.warn(`Missing phone input with key: '${yourPhoneFieldId}'`);
@@ -60,7 +55,7 @@ export class FormSubmissionDataModelToSendToPhoneDomainModelMapper implements Ma
 
         // Confirm phone number is valid
         const rawPhoneNumber = (yourPhoneField.value as string) || "";
-        const phoneValidationResult = phone(rawPhoneNumber, { country: "USA" });
+        const phoneValidationResult = phone(rawPhoneNumber, { country: FORM_PHONE_NUMBER_COUNTRY_CODE });
 
         if (!phoneValidationResult.isValid) {
              console.warn("The provided phone number is not valid");
