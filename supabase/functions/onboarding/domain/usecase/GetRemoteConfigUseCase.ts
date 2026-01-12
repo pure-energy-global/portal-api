@@ -1,5 +1,5 @@
-import { RemoteConfigRepository } from "../../data/repository/RemoteConfigRepository.ts";
 import { RemoteConfigDomainModel } from "../model/RemoteConfigDomainModel.ts";
+import { RemoteConfigRepository } from "../../data/repository/RemoteConfigRepository.ts";
 
 export class GetRemoteConfigUseCase {
     constructor(

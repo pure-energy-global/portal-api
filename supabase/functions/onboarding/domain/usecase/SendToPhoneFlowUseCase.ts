@@ -1,4 +1,4 @@
-import { FormSubmissionDataModelToSendToPhoneDomainModelMapper } from "../../data/mapper/FormSubmissionToSendToPhoneMapper.ts";
+import { FormSubmissionDataModelToSendToPhoneDomainModelMapper } from "../../data/mapper/FormSubmissionDataModelToSendToPhoneDomainModelMapper.ts";
 import { StringToFormSubmissionDataModelMapper } from "../../data/mapper/StringToFormSubmissionDataModelMapper.ts";
 import { SendToPhoneDomainModel } from "../model/SendToPhoneDomainModel.ts";
 

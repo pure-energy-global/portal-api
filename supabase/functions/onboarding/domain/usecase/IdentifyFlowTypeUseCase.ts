@@ -1,5 +1,5 @@
 import { FlowTypeDomainModel } from "../model/FlowTypeDomainModel.ts";
-import { FormSubmissionDataModelToSendToPhoneDomainModelMapper } from "../../data/mapper/FormSubmissionToSendToPhoneMapper.ts";
+import { FormSubmissionDataModelToSendToPhoneDomainModelMapper } from "../../data/mapper/FormSubmissionDataModelToSendToPhoneDomainModelMapper.ts";
 import { StringToFormSubmissionDataModelMapper } from "../../data/mapper/StringToFormSubmissionDataModelMapper.ts";
 
 export class IdentifyFlowTypeUseCase {
@@ -16,7 +16,7 @@ export class IdentifyFlowTypeUseCase {
             console.log("Payload matches the 'Send to Phone' flow");
             return FlowTypeDomainModel.SEND_TO_PHONE;
         } else {
-            console.log("Payload does not match the 'Send to Phone' flow");
+            console.log("Payload does not match any supported flow");
             return FlowTypeDomainModel.OTHER;
         }
     }
