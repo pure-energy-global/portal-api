@@ -1,13 +1,13 @@
+import { ContentfulStatusCode } from "hono/utils/http-status";
 import { EDGE_BASE_PATH } from "./config.ts";
+import { FlowTypeDomainModel } from "./domain/model/FlowTypeDomainModel.ts";
+import { HaltInvalidWebhookInvocationsUseCase } from "./domain/usecase/HaltInvalidWebhookInvocationsUseCase.ts";
 import { Hono } from "hono"
 import { HttpError } from "../_shared/domain/model/HttpError.ts";
-import { LogPhoneNumberUseCase } from "./domain/usecase/LogPhoneNumberUseCase.ts"
-import { HaltInvalidWebhookInvocationsUseCase } from "./domain/usecase/HaltInvalidWebhookInvocationsUseCase.ts";
 import { IdentifyFlowTypeUseCase } from "./domain/usecase/IdentifyFlowTypeUseCase.ts";
 import { NotImplementedError } from "../_shared/domain/model/NotImplementedError.ts";
+import { SendToPhoneFlowUseCase } from "./domain/usecase/SendToPhoneFlowUseCase.ts"
 import { UnknownError } from "../_shared/domain/model/UnknownError.ts";
-import { ContentfulStatusCode } from "hono/utils/http-status";
-import { FlowTypeDomainModel } from "./domain/model/FlowTypeDomainModel.ts";
 
 const app = new Hono().basePath(EDGE_BASE_PATH);
 
@@ -24,7 +24,7 @@ app.post("/", async (context) => {
     const flowType = await new IdentifyFlowTypeUseCase().execute(body);
 
     if (flowType === FlowTypeDomainModel.SEND_TO_PHONE) {
-        await new LogPhoneNumberUseCase().execute(body);
+        await new SendToPhoneFlowUseCase().execute(body);
         return context.body(null, 204);
     }
 
