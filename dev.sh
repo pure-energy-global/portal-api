@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 # Does these things:
-# 1. Ensures the 'portal-api' supabase compose stack exists and is running
+# 1. Ensures the 'portal-api' Supabase Docker Compose stack exists and is running
 # 2. Pulls secrets from Doppler into supabase/.env
-# 3. Serves Supabase functions with the pulled env file and inspector enabled
-# 4. Cleans up the env file on exit, interrupt, or termination
+# 3. Serves Supabase Edge Functions with the pulled .env file and inspector enabled
+# 4. Cleans up the .env file on exit, interrupt, or termination
 
 set -Eeuo pipefail
 
