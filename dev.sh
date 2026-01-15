@@ -67,5 +67,5 @@ ensure_stack_running_or_start
 # Pull secrets from Doppler into supabase/.env
 doppler secrets download --no-file --format env > "$ENV_FILE"
 
-# Run functions serve (your exact command, just pointing at the supabase/.env file)
+# Run functions serve
 supabase functions serve --inspect-mode run --env-file "$ENV_FILE"
