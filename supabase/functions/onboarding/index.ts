@@ -19,7 +19,7 @@ app.use(async (context, next) => {
     await next();
 });
 
-app.post("/", async (context) => {
+app.post("/register", async (context) => {
     const body = await context.req.json();
     const flowType = await new IdentifyFlowTypeUseCase().execute(body);
 
